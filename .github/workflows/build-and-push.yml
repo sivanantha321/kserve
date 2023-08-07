@@ -15,6 +15,9 @@ on:
       platforms:
         required: true
         type: string
+      build-base-images:
+        required: true
+        type: boolean
 
 jobs:
   build-and-push:
@@ -37,7 +40,7 @@ jobs:
 
       - name: Export version variable
         run: |
-          IMAGE_ID=kserve/${{ inputs.image-name }}
+          IMAGE_ID=sivanantha/${{ inputs.image-name }}
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
@@ -50,9 +53,30 @@ jobs:
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=latest
 
           echo VERSION=$VERSION >> $GITHUB_ENV
           echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
+
+      - name: Build kserve build base image
+        if: ${{ inputs.build-base-images == true }}
+        uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ inputs.platforms }}
+          context: python
+          file: python/build_base_image.Dockerfile
+          push: false
+          tags: build-base-image:latest
+
+      - name: Build kserve prod base image
+        if: ${{ inputs.build-base-images == true }}
+        uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ inputs.platforms }}
+          context: python
+          file: python/prod_base_image.Dockerfile
+          push: false
+          tags: build-base-image:latest
 
       - name: Build and push
         uses: docker/build-push-action@v4
