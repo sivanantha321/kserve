@@ -58,6 +58,10 @@ jobs:
           echo VERSION=$VERSION >> $GITHUB_ENV
           echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
 
+      - name: List builders
+        run: |
+          docker builder ls
+
       - name: Build kserve build base image
         if: ${{ inputs.build-base-images == true }}
         uses: docker/build-push-action@v4
@@ -67,6 +71,9 @@ jobs:
           file: python/build_base_image.Dockerfile
           push: false
           tags: build-base-image:latest
+          load: true
+#        run: |
+#          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag build-base-image:latest -o type=docker python
 
       - name: Build kserve prod base image
         if: ${{ inputs.build-base-images == true }}
@@ -76,7 +83,16 @@ jobs:
           context: python
           file: python/prod_base_image.Dockerfile
           push: false
-          tags: build-base-image:latest
+          tags: prod-base-image:latest
+          load: true
+#        run: |
+#          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag prod-base-image:latest -o type=docker python
+
+      - name: docker images
+        run: |
+          docker image ls
+          docker pull prod-base-image:latest
+          docker pull build-base-image:latest
 
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -86,5 +102,3 @@ jobs:
           file: ${{ inputs.Dockerfile-path }}
           push: true
           tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
-
-

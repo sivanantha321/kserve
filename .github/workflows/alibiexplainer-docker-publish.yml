@@ -16,29 +16,29 @@ on:
 jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Run tests
-        run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            cd python
-            docker buildx build . --file build_base_image.Dockerfile -t build-base-image:latest
-            docker buildx build . --file prod_base_image.Dockerfile -t prod-base-image:latest
-            docker buildx build . --file alibiexplainer.Dockerfile
-          fi
+#  test:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#
+#      - name: Run tests
+#        run: |
+#          if [ -f docker-compose.test.yml ]; then
+#            docker-compose --file docker-compose.test.yml build
+#            docker-compose --file docker-compose.test.yml run sut
+#          else
+#            cd python
+#            docker buildx build . --file build_base_image.Dockerfile -t build-base-image:latest
+#            docker buildx build . --file prod_base_image.Dockerfile -t prod-base-image:latest
+#            docker buildx build . --file alibiexplainer.Dockerfile
+#          fi
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
     # Ensure test job passes before pushing image.
-    needs: test
+#    needs: test
 
 #    if: github.event_name == 'push'
     uses: ./.github/workflows/build-and-push.yml
@@ -46,6 +46,6 @@ jobs:
       image-name: alibi-explainer
       context: python
       dockerfile-path: python/alibiexplainer.Dockerfile
-      platforms: linux/amd64, linux/arm64/v8
+      platforms: linux/amd64,linux/arm64/v8
       build-base-images: true
     secrets: inherit
