@@ -46,6 +46,6 @@ jobs:
       image-name: alibi-explainer
       context: python
       dockerfile-path: python/alibiexplainer.Dockerfile
-      platforms: linux/amd64,linux/arm64/v8
+      platforms: linux/amd64
       build-base-images: true
     secrets: inherit
