@@ -73,7 +73,7 @@ jobs:
         #          tags: build-base-image:latest
         #          outputs: type=oci,dest=build-base-image-oci
         run: |
-          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag build-base-image:latest -o type=oci,dest=build-base-image-oci python
+          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} -o type=oci,dest=build-base-image-oci python
 
       - name: Build kserve prod base image
         if: ${{ inputs.build-base-images == true }}
@@ -86,26 +86,26 @@ jobs:
         #          tags: prod-base-image:latest
         #          outputs: type=oci,dest=prod-base-image-oci
         run: |
-          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag prod-base-image:latest -o type=oci,dest=prod-base-image-oci python
+          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} -o type=oci,dest=prod-base-image-oci python
 
       - name: docker images
         run: |
           ls
-          docker image import build-base-image-oci build-base-image:latest
-          docker image import prod-base-image-oci prod-base-image:latest
-          docker image inspect build-base-image:latest
-          docker search build-base-image:latest
+          docker image import build-base-image-oci sivanantha/build-base-image:${{ github.sha }}
+          docker image import prod-base-image-oci sivanantha/prod-base-image:${{ github.sha }}
+          docker image inspect sivanantha/build-base-image:${{ github.sha }}
+          docker search sivanantha/build-base-image:${{ github.sha }}
           docker image ls
 
       - name: Upload build base image
         uses: ishworkh/docker-image-artifact-upload@v1
         with:
-          image: "build-base-image:latest"
+          image: "sivanantha/build-base-image:${{ github.sha }}"
 
       - name: Upload prod base image
         uses: ishworkh/docker-image-artifact-upload@v1
         with:
-          image: "prod-base-image:latest"
+          image: "sivanantha/prod-base-image:${{ github.sha }}"
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -179,20 +179,19 @@ jobs:
       - name: Download build base image
         uses: ishworkh/docker-image-artifact-download@v1
         with:
-          image: "build-base-image:latest"
+          image: "sivanantha/build-base-image:${{ github.sha }}"
 
       - name: Download prod base image
         uses: ishworkh/docker-image-artifact-download@v1
         with:
-          image: "prod-base-image:latest"
+          image: "sivanantha/prod-base-image:${{ github.sha }}"
 
       - name: docker images
         run: |
           ls
-          #docker image import build-base-image-oci build-base-image:latest
-          #docker image import prod-base-image-oci prod-base-image:latest
-          docker image inspect build-base-image:latest
-          docker search build-base-image:latest
+          #docker image import build-base-image-oci build-base-image:${{ github.sha }}
+          #docker image import prod-base-image-oci prod-base-image:${{ github.sha }}
+          docker image inspect sivanantha/build-base-image:${{ github.sha }}
           docker image ls
 
       - name: Build and push
@@ -204,6 +203,6 @@ jobs:
 #          push: true
 #          tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
         run: |
-          docker buildx build --file ${{ inputs.Dockerfile-path }} --platform ${{ inputs.platforms }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} ${{ inputs.context }}
+          docker buildx build --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --platform ${{ inputs.platforms }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --load ${{ inputs.context }}
           docker push ${{ env.IMAGE_ID }}:${{ env.VERSION }}
 

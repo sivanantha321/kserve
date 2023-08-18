@@ -277,7 +277,7 @@ docker-push-custom-transformer-grpc: docker-build-custom-transformer-grpc
 	docker push ${KO_DOCKER_REPO}/${CUSTOM_TRANSFORMER_GRPC_IMG}
 
 docker-build-alibi: docker-build-build-baseimage docker-build-prod-baseimage
-	cd python && docker buildx build -t ${KO_DOCKER_REPO}/${ALIBI_IMG} -f alibiexplainer.Dockerfile .
+	cd python && docker buildx build --build-arg VERSION=latest -t ${KO_DOCKER_REPO}/${ALIBI_IMG} -f alibiexplainer.Dockerfile .
 
 docker-push-alibi: docker-build-alibi
 	docker push ${KO_DOCKER_REPO}/${ALIBI_IMG}
