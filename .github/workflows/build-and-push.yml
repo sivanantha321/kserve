@@ -73,7 +73,7 @@ jobs:
         #          tags: build-base-image:latest
         #          outputs: type=oci,dest=build-base-image-oci
         run: |
-          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} -o type=oci,dest=build-base-image-oci python
+          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} --load python
 
       - name: Build kserve prod base image
         if: ${{ inputs.build-base-images == true }}
@@ -86,16 +86,12 @@ jobs:
         #          tags: prod-base-image:latest
         #          outputs: type=oci,dest=prod-base-image-oci
         run: |
-          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} -o type=oci,dest=prod-base-image-oci python
+          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} --load python
 
       - name: docker images
         run: |
-          ls
-          docker image import build-base-image-oci sivanantha/build-base-image:${{ github.sha }}
-          docker image import prod-base-image-oci sivanantha/prod-base-image:${{ github.sha }}
-          docker image inspect sivanantha/build-base-image:${{ github.sha }}
-          docker search sivanantha/build-base-image:${{ github.sha }}
           docker image ls
+          docker image inspect sivanantha/build-base-image:${{ github.sha }}
 
       - name: Upload build base image
         uses: ishworkh/docker-image-artifact-upload@v1
@@ -188,9 +184,6 @@ jobs:
 
       - name: docker images
         run: |
-          ls
-          #docker image import build-base-image-oci build-base-image:${{ github.sha }}
-          #docker image import prod-base-image-oci prod-base-image:${{ github.sha }}
           docker image inspect sivanantha/build-base-image:${{ github.sha }}
           docker image ls
 
