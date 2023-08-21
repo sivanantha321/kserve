@@ -196,6 +196,6 @@ jobs:
 #          push: true
 #          tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
         run: |
-          docker buildx build --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --platform ${{ inputs.platforms }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --load ${{ inputs.context }}
+          docker build --build-context sivanantha/build-base-image:${{ github.sha }}=docker-image://sivanantha/build-base-image:${{ github.sha }} --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --platform ${{ inputs.platforms }} --load ${{ inputs.context }}
           docker push ${{ env.IMAGE_ID }}:${{ env.VERSION }}
 
