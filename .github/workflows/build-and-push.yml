@@ -20,92 +20,92 @@ on:
         type: boolean
 
 jobs:
-  build-base-images:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Export version variable
-        run: |
-          IMAGE_ID=sivanantha/${{ inputs.image-name }}
-          
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          
-          # Strip "v" prefix from tag name
-          # [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-          VERSION=latest
-          
-          echo VERSION=$VERSION >> $GITHUB_ENV
-          echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
-
-      - name: List builders
-        run: |
-          docker builder ls
-
-      - name: Build kserve build base image
-        #        if: ${{ inputs.build-base-images == true }}
-        #        uses: docker/build-push-action@v4
-        #        with:
-        #          platforms: ${{ inputs.platforms }}
-        #          context: python
-        #          file: python/build_base_image.Dockerfile
-        #          push: false
-        #          tags: build-base-image:latest
-        #          outputs: type=oci,dest=build-base-image-oci
-        run: |
-          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} --load python
-
-      - name: Build kserve prod base image
-        if: ${{ inputs.build-base-images == true }}
-        #        uses: docker/build-push-action@v4
-        #        with:
-        #          platforms: ${{ inputs.platforms }}
-        #          context: python
-        #          file: python/prod_base_image.Dockerfile
-        #          push: false
-        #          tags: prod-base-image:latest
-        #          outputs: type=oci,dest=prod-base-image-oci
-        run: |
-          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} --load python
-
-      - name: docker images
-        run: |
-          docker image ls
-          docker image inspect sivanantha/build-base-image:${{ github.sha }}
-
-      - name: Upload build base image
-        uses: ishworkh/docker-image-artifact-upload@v1
-        with:
-          image: "sivanantha/build-base-image:${{ github.sha }}"
-
-      - name: Upload prod base image
-        uses: ishworkh/docker-image-artifact-upload@v1
-        with:
-          image: "sivanantha/prod-base-image:${{ github.sha }}"
+#  build-base-images:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Setup QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Setup Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_USER }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Export version variable
+#        run: |
+#          IMAGE_ID=sivanantha/${{ inputs.image-name }}
+#
+#          # Change all uppercase to lowercase
+#          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+#
+#          # Strip git ref prefix from version
+#          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+#
+#          # Strip "v" prefix from tag name
+#          # [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+#
+#          # Use Docker `latest` tag convention
+#          [ "$VERSION" == "master" ] && VERSION=latest
+#          VERSION=latest
+#
+#          echo VERSION=$VERSION >> $GITHUB_ENV
+#          echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
+#
+#      - name: List builders
+#        run: |
+#          docker builder ls
+#
+#      - name: Build kserve build base image
+#        #        if: ${{ inputs.build-base-images == true }}
+#        #        uses: docker/build-push-action@v4
+#        #        with:
+#        #          platforms: ${{ inputs.platforms }}
+#        #          context: python
+#        #          file: python/build_base_image.Dockerfile
+#        #          push: false
+#        #          tags: build-base-image:latest
+#        #          outputs: type=oci,dest=build-base-image-oci
+#        run: |
+#          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} --load python
+#
+#      - name: Build kserve prod base image
+#        if: ${{ inputs.build-base-images == true }}
+#        #        uses: docker/build-push-action@v4
+#        #        with:
+#        #          platforms: ${{ inputs.platforms }}
+#        #          context: python
+#        #          file: python/prod_base_image.Dockerfile
+#        #          push: false
+#        #          tags: prod-base-image:latest
+#        #          outputs: type=oci,dest=prod-base-image-oci
+#        run: |
+#          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} --load python
+#
+#      - name: docker images
+#        run: |
+#          docker image ls
+#          docker image inspect sivanantha/build-base-image:${{ github.sha }}
+#
+#      - name: Upload build base image
+#        uses: ishworkh/docker-image-artifact-upload@v1
+#        with:
+#          image: "sivanantha/build-base-image:${{ github.sha }}"
+#
+#      - name: Upload prod base image
+#        uses: ishworkh/docker-image-artifact-upload@v1
+#        with:
+#          image: "sivanantha/prod-base-image:${{ github.sha }}"
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: build-base-images
+#    needs: build-base-images
 
     steps:
       - uses: actions/checkout@v3
@@ -172,30 +172,34 @@ jobs:
 #        run: |
 #          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag prod-base-image:latest -o type=oci,dest=prod-base-image-oci python
 
-      - name: Download build base image
-        uses: ishworkh/docker-image-artifact-download@v1
-        with:
-          image: "sivanantha/build-base-image:${{ github.sha }}"
+#      - name: Download build base image
+#        uses: ishworkh/docker-image-artifact-download@v1
+#        with:
+#          image: "sivanantha/build-base-image:${{ github.sha }}"
+#
+#      - name: Download prod base image
+#        uses: ishworkh/docker-image-artifact-download@v1
+#        with:
+#          image: "sivanantha/prod-base-image:${{ github.sha }}"
+#
+#      - name: docker images
+#        run: |
+#          docker image inspect sivanantha/build-base-image:${{ github.sha }}
+#          docker image ls
 
-      - name: Download prod base image
-        uses: ishworkh/docker-image-artifact-download@v1
-        with:
-          image: "sivanantha/prod-base-image:${{ github.sha }}"
-
-      - name: docker images
-        run: |
-          docker image inspect sivanantha/build-base-image:${{ github.sha }}
-          docker image ls
+#      - name: Build and push
+##        uses: docker/build-push-action@v4
+##        with:
+##          platforms: ${{ inputs.platforms }}
+##          context: ${{ inputs.context }}
+##          file: ${{ inputs.Dockerfile-path }}
+##          push: true
+##          tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
+#        run: |
+#          docker build --build-context sivanantha/build-base-image:${{ github.sha }}=docker-image://sivanantha/build-base-image:${{ github.sha }} --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --platform ${{ inputs.platforms }} --load ${{ inputs.context }}
+#          docker push ${{ env.IMAGE_ID }}:${{ env.VERSION }}
 
       - name: Build and push
-#        uses: docker/build-push-action@v4
-#        with:
-#          platforms: ${{ inputs.platforms }}
-#          context: ${{ inputs.context }}
-#          file: ${{ inputs.Dockerfile-path }}
-#          push: true
-#          tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
         run: |
-          docker build --build-context sivanantha/build-base-image:${{ github.sha }}=docker-image://sivanantha/build-base-image:${{ github.sha }} --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --platform ${{ inputs.platforms }} --load ${{ inputs.context }}
-          docker push ${{ env.IMAGE_ID }}:${{ env.VERSION }}
+          docker buildx bake --push --file ${{ inputs.Dockerfile-path }} --set default.tags=${{ env.IMAGE_ID }}:${{ env.VERSION }} --set *.platform=${{ inputs.platforms }}
 
