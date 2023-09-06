@@ -8,12 +8,10 @@ COPY alibiexplainer alibiexplainer
 RUN cd alibiexplainer && poetry install --no-interaction --no-cache
 
 
-#FROM sivanantha/prod-base-image:${VERSION} as prod
-#FROM prod-base-image as prod
-#
-#
-#COPY --from=builder --chown=kserve:kserve $VIRTUAL_ENV $VIRTUAL_ENV
-#COPY --from=builder kserve kserve
-#COPY --from=builder alibiexplainer alibiexplainer
-#
-#ENTRYPOINT ["python", "-m", "alibiexplainer"]
+FROM prod-base-image as prod
+
+COPY --from=builder --chown=kserve:kserve $VIRTUAL_ENV $VIRTUAL_ENV
+COPY --from=builder kserve kserve
+COPY --from=builder alibiexplainer alibiexplainer
+
+ENTRYPOINT ["python", "-m", "alibiexplainer"]
