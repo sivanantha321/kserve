@@ -1,0 +1,217 @@
+name: Build and Push Images
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      context:
+        required: true
+        type: string
+      dockerfile-path:
+        required: true
+        type: string
+      platforms:
+        required: true
+        type: string
+      build-base-images:
+        required: true
+        type: boolean
+
+jobs:
+#  build-base-images:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Setup QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Setup Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_USER }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Export version variable
+#        run: |
+#          IMAGE_ID=sivanantha/${{ inputs.image-name }}
+#
+#          # Change all uppercase to lowercase
+#          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+#
+#          # Strip git ref prefix from version
+#          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+#
+#          # Strip "v" prefix from tag name
+#          # [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+#
+#          # Use Docker `latest` tag convention
+#          [ "$VERSION" == "master" ] && VERSION=latest
+#          VERSION=latest
+#
+#          echo VERSION=$VERSION >> $GITHUB_ENV
+#          echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
+#
+#      - name: List builders
+#        run: |
+#          docker builder ls
+#
+#      - name: Build kserve build base image
+#        #        if: ${{ inputs.build-base-images == true }}
+#        #        uses: docker/build-push-action@v4
+#        #        with:
+#        #          platforms: ${{ inputs.platforms }}
+#        #          context: python
+#        #          file: python/build_base_image.Dockerfile
+#        #          push: false
+#        #          tags: build-base-image:latest
+#        #          outputs: type=oci,dest=build-base-image-oci
+#        run: |
+#          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/build-base-image:${{ github.sha }} --load python
+#
+#      - name: Build kserve prod base image
+#        if: ${{ inputs.build-base-images == true }}
+#        #        uses: docker/build-push-action@v4
+#        #        with:
+#        #          platforms: ${{ inputs.platforms }}
+#        #          context: python
+#        #          file: python/prod_base_image.Dockerfile
+#        #          push: false
+#        #          tags: prod-base-image:latest
+#        #          outputs: type=oci,dest=prod-base-image-oci
+#        run: |
+#          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag sivanantha/prod-base-image:${{ github.sha }} --load python
+#
+#      - name: docker images
+#        run: |
+#          docker image ls
+#          docker image inspect sivanantha/build-base-image:${{ github.sha }}
+#
+#      - name: Upload build base image
+#        uses: ishworkh/docker-image-artifact-upload@v1
+#        with:
+#          image: "sivanantha/build-base-image:${{ github.sha }}"
+#
+#      - name: Upload prod base image
+#        uses: ishworkh/docker-image-artifact-upload@v1
+#        with:
+#          image: "sivanantha/prod-base-image:${{ github.sha }}"
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+#    needs: build-base-images
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          # network=host driver-opt needed to push to local registry
+          driver-opts: network=host
+
+      - name: Build kserve build base image
+        if: ${{ inputs.build-base-images == true }}
+        uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ inputs.platforms }}
+          context: python
+          file: python/build_base_image.Dockerfile
+          push: true
+          tags: localhost:5000/build-base-image:latest
+
+      - name: Build kserve prod base image
+        if: ${{ inputs.build-base-images == true }}
+        uses: docker/build-push-action@v4
+        with:
+          platforms: ${{ inputs.platforms }}
+          context: python
+          file: python/prod_base_image.Dockerfile
+          push: true
+          tags: localhost:5000/prod-base-image:latest
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Export version variable
+        run: |
+          IMAGE_ID=sivanantha/${{ inputs.image-name }}
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          # [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=latest
+
+          echo VERSION=$VERSION >> $GITHUB_ENV
+          echo IMAGE_ID=$IMAGE_ID >> $GITHUB_ENV
+
+#      - name: Build kserve build base image
+#        if: ${{ inputs.build-base-images == true }}
+#        uses: docker/build-push-action@v4
+#        with:
+#          platforms: ${{ inputs.platforms }}
+#          context: python
+#          file: python/build_base_image.Dockerfile
+#          push: false
+#          tags: build-base-image:latest
+#          outputs: type=oci,dest=build-base-image-oci
+#        run: |
+#          docker buildx build --file python/build_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag build-base-image:latest -o type=oci,dest=build-base-image-oci python
+
+#      - name: Build kserve prod base image
+#        if: ${{ inputs.build-base-images == true }}
+#        uses: docker/build-push-action@v4
+#        with:
+#          platforms: ${{ inputs.platforms }}
+#          context: python
+#          file: python/prod_base_image.Dockerfile
+#          push: false
+#          tags: prod-base-image:latest
+#          outputs: type=oci,dest=prod-base-image-oci
+#        run: |
+#          docker buildx build --file python/prod_base_image.Dockerfile --platform ${{ inputs.platforms }} --tag prod-base-image:latest -o type=oci,dest=prod-base-image-oci python
+
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          build-contexts: |
+            build-base-image=docker-image://localhost:5000/build-base-image:latest
+            prod-base-image=docker-image://localhost:5000/prod-base-image:latest
+          platforms: ${{ inputs.platforms }}
+          context: ${{ inputs.context }}
+          file: ${{ inputs.Dockerfile-path }}
+          push: true
+          tags: ${{ env.IMAGE_ID }}:${{ env.VERSION }}
+#        run: |
+#          docker buildx build --push --build-context build-base-image=docker-image://sivanantha/build-base-image:${{ github.sha }} --file ${{ inputs.Dockerfile-path }} --build-arg VERSION=${{ github.sha }} --tag ${{ env.IMAGE_ID }}:${{ env.VERSION }} --platform ${{ inputs.platforms }} ${{ inputs.context }}
+
+#      - name: Build and push
+#        run: |
+#          docker buildx bake --push --file ${{ inputs.Dockerfile-path }} --set default.tags=${{ env.IMAGE_ID }}:${{ env.VERSION }} --set *.platform=${{ inputs.platforms }}
+#
