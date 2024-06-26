@@ -16,7 +16,7 @@ import os
 
 import pytest
 from kubernetes import client
-from kubernetes.client import V1ResourceRequirements
+from kubernetes.client import V1ResourceRequirements, V1EnvVar
 
 from kserve import (
     V1beta1PredictorSpec,
@@ -302,6 +302,13 @@ def test_vllm_openai_chat_completions():
                 "--device",
                 "cpu",
             ],
+            env=[
+                V1EnvVar(
+                    "VLLM_LOGGING_LEVEL",
+                    "DEBUG",
+                ),
+                V1EnvVar("VLLM_TRACE_FUNCTION", "1"),
+            ],  # Add environment variables
             resources=V1ResourceRequirements(
                 requests={"cpu": "1", "memory": "2Gi"},
                 limits={"cpu": "1", "memory": "4Gi"},
