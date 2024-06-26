@@ -126,7 +126,7 @@ class HuggingfaceEncoderModel(Model):  # pylint:disable=c-extension-no-member
 
         self.max_length = _get_and_verify_max_len(self.model_config, self.max_length)
 
-        # device_map = "auto" enables model parallelism but all model architcture dont support it.
+        # device_map = "auto" enables model parallelism but all model architecture don't support it.
         # For pre-check we initialize the model class without weights to check the `_no_split_modules`
         # device_map = "auto" for models that support this else set to either cuda/cpu
         with init_empty_weights():
