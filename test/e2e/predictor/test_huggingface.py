@@ -289,6 +289,7 @@ def test_vllm_openai_chat_completions():
             model_format=V1beta1ModelFormat(
                 name="huggingface",
             ),
+            image="sivanantha/huggingfaceserver-vllm-cpu@sha256:c4cffce3377c0fcc68e477058c14b61b8e98ad2f41f825302febf0d5eabf0d3d",
             args=[
                 "--model_id",
                 "facebook/opt-125m",
