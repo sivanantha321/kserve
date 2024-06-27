@@ -293,14 +293,6 @@ def test_vllm_openai_chat_completions():
             args=[
                 "--model_id",
                 "facebook/opt-125m",
-                "--model_revision",
-                "27dcfa74d334bc871f3234de431e71c6eeba5dd6",
-                "--tokenizer_revision",
-                "27dcfa74d334bc871f3234de431e71c6eeba5dd6",
-                "--backend",
-                "vllm",
-                "--device",
-                "cpu",
             ],
             env=[
                 V1EnvVar(
