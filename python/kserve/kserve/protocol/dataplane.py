@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import time
 from importlib import metadata
 from typing import Dict, Optional, Tuple, Union
@@ -26,10 +25,12 @@ from ray.serve.handle import DeploymentHandle
 
 from ..constants import constants
 from ..errors import InvalidInput, ModelNotFound
+from ..logging import logger
 from ..model import InferenceVerb, Model
 from ..model_repository import ModelRepository
 from ..utils.utils import create_response_cloudevent, is_structured_cloudevent
 from .infer_type import InferRequest, InferResponse
+from .rest.openai import OpenAIModel
 
 JSON_HEADERS = [
     "application/json",
@@ -251,7 +252,7 @@ class DataPlane:
 
         decoded_body, attributes = self.decode_cloudevent(body)
         t2 = time.time()
-        logging.debug(f"decoded request in {round((t2 - t1) * 1000, 9)}ms")
+        logger.debug(f"decoded request in {round((t2 - t1) * 1000, 9)}ms")
         return decoded_body, attributes
 
     def decode_cloudevent(self, body) -> Tuple[Union[Dict, InferRequest], Dict]:
@@ -333,6 +334,9 @@ class DataPlane:
         """
         # call model locally or remote model workers
         model = self.get_model(model_name)
+        if isinstance(model, OpenAIModel):
+            error_msg = f"Model {model_name} is of type OpenAIModel. It does not support the infer method."
+            raise InvalidInput(reason=error_msg)
         if isinstance(model, DeploymentHandle):
             response = await model.remote(request, headers=headers)
         else:
@@ -360,6 +364,11 @@ class DataPlane:
         """
         # call model locally or remote model workers
         model = self.get_model(model_name)
+        if isinstance(model, OpenAIModel):
+            logger.warning(
+                f"Model {model_name} is of type OpenAIModel. It does not support the explain method."
+                " A request exercised this path and will cause a server crash."
+            )
         if isinstance(model, DeploymentHandle):
             response = await model.remote(request, verb=InferenceVerb.EXPLAIN)
         else:

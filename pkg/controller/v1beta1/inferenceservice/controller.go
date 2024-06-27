@@ -76,7 +76,7 @@ import (
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
 
-// InferenceState describes the Readiness of the InferenceService
+// InferenceServiceState describes the Readiness of the InferenceService
 type InferenceServiceState string
 
 // Different InferenceServiceState an InferenceService may have.
@@ -96,8 +96,6 @@ type InferenceServiceReconciler struct {
 }
 
 func (r *InferenceServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-
 	// Fetch the InferenceService instance
 	isvc := &v1beta1api.InferenceService{}
 	if err := r.Get(ctx, req.NamespacedName, isvc); err != nil {
@@ -170,7 +168,7 @@ func (r *InferenceServiceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// Abort early if the resolved deployment mode is Serverless, but Knative Services are not available
 	if deploymentMode == constants.Serverless {
 		ksvcAvailable, checkKsvcErr := utils.IsCrdAvailable(r.ClientConfig, knservingv1.SchemeGroupVersion.String(), constants.KnativeServiceKind)
-		if err != nil {
+		if checkKsvcErr != nil {
 			return reconcile.Result{}, checkKsvcErr
 		}
 
@@ -261,7 +259,7 @@ func (r *InferenceServiceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if err = r.updateStatus(isvc, deploymentMode); err != nil {
-		r.Recorder.Eventf(isvc, v1.EventTypeWarning, "InternalError", err.Error())
+		r.Recorder.Event(isvc, v1.EventTypeWarning, "InternalError", err.Error())
 		return reconcile.Result{}, err
 	}
 

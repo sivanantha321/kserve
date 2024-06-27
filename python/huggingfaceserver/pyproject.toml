@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "huggingfaceserver"
-version = "0.13.0rc0"
+version = "0.13.0"
 description = "Model Server implementation for huggingface. Not intended for use outside KServe Frameworks Images."
 authors = ["Dan Sun <dsun20@bloomberg.net>"]
 license = "https://github.com/kserve/kserve/blob/master/LICENSE"
@@ -15,7 +15,7 @@ kserve = { path = "../kserve", extras = ["storage"], develop = true }
 transformers = "~4.40.2"
 accelerate = "~0.30.0"
 torch = "~2.3.0"
-vllm = { version = "^0.4.2", optional = true }
+vllm = { version = "^0.4.3", optional = true }
 
 [tool.poetry.extras]
 vllm = [

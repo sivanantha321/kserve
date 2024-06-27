@@ -18,6 +18,7 @@ from typing import cast
 
 import torch
 import kserve
+from kserve import logging
 from kserve.logging import logger
 from kserve.model import PredictorConfig
 from kserve.storage import Storage
@@ -107,6 +108,11 @@ parser.add_argument(
 parser.add_argument(
     "--return_token_type_ids", action="store_true", help="Return token type ids"
 )
+parser.add_argument(
+    "--return_probabilities",
+    action="store_true",
+    help="Return all probabilities",
+)
 
 parser = maybe_add_vllm_cli_parser(parser)
 
@@ -148,11 +154,14 @@ def load_model():
     if (
         (args.backend == Backend.vllm or args.backend == Backend.auto)
         and vllm_available()
-        and infer_vllm_supported_from_model_architecture(model_id_or_path)
+        and infer_vllm_supported_from_model_architecture(
+            model_id_or_path,
+            trust_remote_code=args.trust_remote_code,
+        )
     ):
         from .vllm.vllm_model import VLLMModel
 
-        args.model = args.model_dir or args.model_id
+        args.model = args.model_id or args.model_dir
         args.revision = args.model_revision
         engine_args = build_vllm_engine_args(args)
         model = VLLMModel(args.model_name, engine_args)
@@ -168,7 +177,9 @@ def load_model():
         }
 
         model_config = AutoConfig.from_pretrained(
-            str(model_id_or_path), revision=kwargs.get("model_revision", None)
+            str(model_id_or_path),
+            revision=kwargs.get("model_revision", None),
+            trust_remote_code=kwargs.get("trust_remote_code", False),
         )
         if kwargs.get("task", None):
             try:
@@ -237,9 +248,11 @@ def load_model():
 
 
 if __name__ == "__main__":
+    if args.configure_logging:
+        logging.configure_logging(args.log_config_file)
     try:
         model = load_model()
-        kserve.ModelServer().start([model] if model.ready else [])
+        kserve.ModelServer().start([model])
     except Exception as e:
         import sys
 
