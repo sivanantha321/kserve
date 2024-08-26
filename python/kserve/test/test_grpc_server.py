@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import grpc
-import grpc_testing
+import grpc_testing, gprcio
 import numpy as np
 import pandas as pd
 import pytest
