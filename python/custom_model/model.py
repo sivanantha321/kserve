@@ -50,6 +50,7 @@ class AlexNetModel(Model):
     def load(self):
         self.model = models.alexnet(pretrained=True, progress=False)
         self.model.eval()
+        print("Model loaded successfully.")
         # The ready flag is used by model ready endpoint for readiness probes,
         # set to True when model is loaded successfully without exceptions.
         self.ready = True
