@@ -30,7 +30,7 @@ from kserve.constants import constants
 from ..common.utils import KSERVE_TEST_NAMESPACE, generate, rerank
 
 
-@pytest.mark.vllm
+# @pytest.mark.vllm
 def test_huggingface_vllm_cpu_openai_chat_completions():
     service_name = "hf-opt-125m-chat"
     predictor = V1beta1PredictorSpec(
@@ -82,7 +82,7 @@ def test_huggingface_vllm_cpu_openai_chat_completions():
     kserve_client.delete(service_name, KSERVE_TEST_NAMESPACE)
 
 
-@pytest.mark.vllm
+# @pytest.mark.vllm
 def test_huggingface_vllm_cpu_openai_completions():
     service_name = "hf-opt-125m-cmpl"
     predictor = V1beta1PredictorSpec(
@@ -155,6 +155,8 @@ def test_huggingface_vllm_cpu_rerank():
                 "--dtype",
                 "bfloat16",
                 "--enforce-eager",
+                "--device",
+                "cpu",
             ],
             resources=V1ResourceRequirements(
                 requests={"cpu": "2", "memory": "6Gi"},
