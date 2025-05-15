@@ -34,6 +34,11 @@ jobs:
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
+      
+      - name: debug
+        run: |
+          sudo free -h
+          sudo df -h
 
       - name: Run tests
         uses: docker/build-push-action@v5
@@ -47,6 +52,12 @@ jobs:
           build-args: |
             torch_cuda_arch_list=9.0+PTX
             vllm_fa_cmake_gpu_arches=90-real
+      
+      - name: debug
+        if: always()
+        run: |
+          sudo free -h
+          sudo df -h
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
