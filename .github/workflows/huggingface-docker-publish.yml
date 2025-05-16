@@ -23,7 +23,7 @@ jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout source
@@ -34,16 +34,30 @@ jobs:
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
+      
+      - name: debug
+        run: |
+          sudo free -h
+          sudo df -h
 
       - name: Run tests
         uses: docker/build-push-action@v5
         with:
-          platforms: linux/amd64
+          platforms: linux/arm64
           context: python
           file: python/huggingface_server.Dockerfile
           push: false
           # https://github.com/docker/buildx/issues/1533
           provenance: false
+          build-args: |
+            torch_cuda_arch_list=9.0+PTX
+            vllm_fa_cmake_gpu_arches=90-real
+      
+      - name: debug
+        if: always()
+        run: |
+          sudo free -h
+          sudo df -h
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
